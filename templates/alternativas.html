@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ingresar número de alternativas</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h2>¿Cuántas alternativas deseas evaluar?</h2>
+    <form method="POST">
+        <label for="num_alternativas">Número de alternativas:</label>
+        <input type="number" name="num_alternativas" min="2" required>
+        <button type="submit">Continuar</button>
+    </form>
+</body>
+</html>

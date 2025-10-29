@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Resultado TOPSIS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h2>Ranking de alternativas (TOPSIS)</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Posición</th>
+      <th>Alternativa</th>
+      <th>Puntaje</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for resultado in resultados %}
+      <tr>
+        <td>{{ loop.index }}</td>  <!-- loop.index empieza en 1 -->
+        <td>{{ resultado[0] }}</td>
+        <td>{{ resultado[1] }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+    <a href="{{ url_for('select_size') }}">Volver al inicio</a>
+</body>
+</html>

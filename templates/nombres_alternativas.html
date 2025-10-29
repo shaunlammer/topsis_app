@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Asignar nombres a las alternativas</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h2>Ingresa el nombre de cada alternativa</h2>
+    <form method="POST">
+        {% for i in range(num_alternativas) %}
+            <label for="alternativa_{{ i }}">Alternativa {{ i + 1 }}:</label>
+            <input type="text" maxlength="20" name="alternativa_{{ i }}" required><br>
+        {% endfor %}
+        <button type="submit">Continuar</button>
+    </form>
+</body>
+</html>

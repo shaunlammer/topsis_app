@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Evaluar alternativas</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h2>Asigna una puntuación de 0 a 100 para cada alternativa según cada criterio</h2>
+    <form method="POST">
+        <table border="1">
+            <tr>
+                <th>Alternativa / Criterio</th>
+                {% for crit in criterios %}
+                    <th>{{ crit }}</th>
+                {% endfor %}
+            </tr>
+            {% for i in range(alternativas|length) %}
+                <tr>
+                    <td><strong>{{ alternativas[i] }}</strong></td>
+                    {% for j in range(criterios|length) %}
+                        <td>
+                            <input type="number" name="cell_{{ i }}_{{ j }}" min="0" max="100" required>
+                        </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </table>
+        <br>
+        <button type="submit">Calcular ranking TOPSIS</button>
+    </form>
+</body>
+</html>
