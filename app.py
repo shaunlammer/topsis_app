@@ -3,6 +3,15 @@ import numpy as np
 
 app = Flask(__name__)
 app.secret_key = "ahp_secret"
+historial = [
+    {"fecha": "2025-11-01", "criterios": 6, "resultado": "Inf: 0.3, Eco: 0.2, ..."},
+    {"fecha": "2025-10-28", "criterios": 4, "resultado": "Eco: 0.4, Rh: 0.3, ..."}
+]
+
+@app.route('/')
+def index():
+    return render_template('home.html', historial=historial)
+
 
 @app.route("/", methods=["GET", "POST"])
 def select_size():

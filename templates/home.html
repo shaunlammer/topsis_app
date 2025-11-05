@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Inicio - TOPSIS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+ <body>
+    <h1>Matriz TOPSIS - Historial de consultas</h1>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Fecha</th>
+                <th>Criterios</th>
+                <th>Resultados</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for consulta in historial %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ consulta.fecha }}</td>
+                <td>{{ consulta.criterio }}</td>
+                <td>{{ consulta.resultado }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <br>
+    <a href="{{ url_for('alternativas') }}">
+        <button>Iniciar nuevo proyecto</button>
+    </a>
+ </body>
+</html>
