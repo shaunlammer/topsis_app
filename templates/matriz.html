@@ -19,7 +19,12 @@
                 <th>{{ criterios[i] }}</th>
                 {% for j in range(num_criterios) %}
                     <td>
-                        <input type="text" name="cell_{{ i }}_{{ j }}" value="{{ '1.00' if i == j else '' }}" required>
+                        <input type="text"
+       name="cell_{{ i }}_{{ j }}"
+       value="{{ '1.00' if i == j else '' }}"
+       required
+       pattern="^(\d+(\.\d+)?|\d+\/\d+)$"
+       title="Ingresa un número o fracción válida (ej. 2, 1.5, 3/4)">
                     </td>
                 {% endfor %}
             </tr>

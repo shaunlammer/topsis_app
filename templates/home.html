@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Inicio - TOPSIS</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
- <body>
+<body>
+
     <h1>Matriz TOPSIS - Historial de consultas</h1>
 
     <table border="1">
@@ -22,16 +22,22 @@
             <tr>
                 <td>{{ loop.index }}</td>
                 <td>{{ consulta.fecha }}</td>
-                <td>{{ consulta.criterio }}</td>
+                <td>{{ consulta.criterios }}</td>
                 <td>{{ consulta.resultado }}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
-    <br>
-    <a href="{{ url_for('alternativas') }}">
-        <button>Iniciar nuevo proyecto</button>
-    </a>
- </body>
+    <br><br>
+
+    <form method="POST" action="{{ url_for('routes.select_size') }}">
+        <label for="num_criterios">Número de criterios:</label>
+        <input type="number" id="num_criterios" name="num_criterios" min="1" required>
+
+        <button type="submit">Iniciar nuevo proyecto</button>
+    </form>
+
+</body>
 </html>
+
