@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Inicio - TOPSIS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <div class="container">
+
+        <h2>Matriz TOPSIS – Historial de consultas</h2>
+
+        <table class="result-table">
+            <tr>
+                <th>#</th>
+                <th>Fecha</th>
+                <th>Criterios</th>
+                <th>Resultados</th>
+            </tr>
+            <tbody>
+                {% for consulta in historial %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ consulta.fecha }}</td>
+                    <td>{{ consulta.criterios }}</td>
+                    <td>{{ consulta.resultado }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4">No hay consultas registradas</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <form method="POST">
+            <label>Número de criterios:</label>
+            <input type="number" name="criterios" min="2" required>
+            <button type="submit" class="btn">Iniciar</button>
+        </form>
+
+        {% if num_criterios %}
+        <hr>
+
+        <h2>Asigna un nombre a cada criterio</h2>
+        <form method="POST">
+            <input type="hidden" name="num_criterios" value="{{ num_criterios }}">
+
+            {% for i in range(num_criterios) %}
+            <div class="criterio-row">
+                <label>Criterio {{ i+1 }}:</label>
+                <input type="text" name="criterio_{{ i }}" required>
+
+                <select name="tipo_{{ i }}">
+                    <option value="max">Maximizar</option>
+                    <option value="min">Minimizar</option>
+                </select>
+            </div>
+            {% endfor %}
+            
+            <button type="submit" class="btn">Continuar a AHP</button>
+        </form>
+        {% endif %}
+    </div>
+</body>
+</html>
+
+

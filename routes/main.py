@@ -1,195 +1,196 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 import numpy as np
 
 routes = Blueprint('routes', __name__)
 
-# Historial de ejemplo
-historial = [
-    {"fecha": "2025-11-01", "criterios": 6, "resultado": "Inf: 0.3, Eco: 0.2, ..."},
-    {"fecha": "2025-10-28", "criterios": 4, "resultado": "Eco: 0.4, Rh: 0.3, ..."}
-]
-
-# --------------------------
-# HOME
-# --------------------------
-@routes.route("/")
+@routes.route('/', methods=['GET', 'POST'])
 def index():
-    return render_template("home.html", historial=historial)
+    historial = []
+    num_criterios = None
 
+    if request.method == 'POST':
+        
+        if 'criterios' in request.form:
+            num_criterios = int(request.form['criterios'])
+            session["num_criterios"] = num_criterios
 
-# --------------------------
-# SELECCIÓN DE NÚMERO DE CRITERIOS
-# --------------------------
-@routes.route("/select_size", methods=["POST"])
-def select_size():
-    num = request.form.get("num_criterios")
+        if 'criterio_0' in request.form:
+            num_criterios = session.get('num_criterios')
 
-    if not num:
-        return redirect(url_for("routes.index"))
+            if num_criterios is None:
+                flash("Error: no se encontro el numero de criterios")
+                return redirect(url_for('routes.index'))
+            
+            criterios = []
+            for i in range(num_criterios):
+                valor = request.form.get(f'criterio_{i}')
+                if not valor:
+                    flash(f'Falta el nombre de criterio {i+1}')
+                    return redirect(url_for('routes.index'))
+                criterios.append(valor)
 
-    session["num_criterios"] = int(num)
-    return redirect(url_for("routes.assign_names"))
+            tipos = [request.form.get(f"tipo_{i}", "max") for i in range(num_criterios)]
+            session["criterios"] = criterios
+            session["tipos"] = tipos
+            return redirect(url_for("routes.ahp"))
+        
+    return render_template(
+        "index.html",
+        historial=historial,
+        num_criterios=num_criterios
+        )
 
-
-# --------------------------
-# ASIGNAR NOMBRES DE CRITERIOS
-# --------------------------
-@routes.route("/assign", methods=["GET", "POST"])
-def assign_names():
-    num = session.get("num_criterios")
-
-    if num is None:
-        return redirect(url_for("routes.index"))
-
-    if request.method == "POST":
-        criterios = [request.form[f"criterio_{i}"] for i in range(num)]
-        tipos = [request.form.get(f"tipo_{i}", "max") for i in range(num)]
-
-        session["criterios"] = criterios
-        session["tipos"] = tipos
-
-        return redirect(url_for("routes.matriz"))
-
-    return render_template("assign_names.html", num_criterios=num)
-
-
-# --------------------------
-# MATRIZ AHP
-# --------------------------
 @routes.route("/matriz", methods=["GET", "POST"])
-def matriz():
-    num = session.get("num_criterios")
-    criterios = session.get("criterios")
+def ahp():
+    criterios = session.get('criterios')
+    num_criterios = len(criterios)
+    pesos = None
 
-    if num is None or criterios is None:
-        return redirect(url_for("routes.index"))
+    if request.method == 'POST':
+        matriz = []
 
-    if request.method == "POST":
-        matriz = np.zeros((num, num))
+        for i in range(num_criterios):
+            fila = []
+            for j in range(num_criterios):
+                valor = request.form.get(f'cell_{i}_{j}')
+                fila.append(valor)
+            matriz.append(fila)
 
-        for i in range(num):
-            for j in range(num):
-                entrada = request.form[f"cell_{i}_{j}"]
-                try:
-                    valor = float(entrada)
-                    if valor <= 0:
-                        raise ValueError
-                    matriz[i][j] = valor
-                except:
-                    matriz[i][j] = 1.0 if i == j else 0.0
+        matriz = np.array(matriz, dtype=float)
 
         valores, vectores = np.linalg.eig(matriz)
+        valores = np.real_if_close(valores)
+        vectores = np.real_if_close(vectores)
+
         indice_max = np.argmax(valores.real)
         vector_eigen = vectores[:, indice_max].real
         pesos = vector_eigen / np.sum(vector_eigen)
+    return render_template(
+    "ahp.html",
+    criterios=criterios,
+    num_criterios=num_criterios,
+    pesos=pesos
+)
 
-        session["pesos"] = pesos.tolist()
-
-        return render_template("resultado.html", criterios=criterios, pesos=np.round(pesos, 4))
-
-    return render_template("matriz.html", num_criterios=num, criterios=criterios)
-
-
-# --------------------------
-# NÚMERO DE ALTERNATIVAS
-# --------------------------
-@routes.route("/alternativas", methods=["GET", "POST"])
+@routes.route("/alternativas", methods=['GET','POST'])
 def alternativas():
     criterios = session.get("criterios")
-
     if criterios is None:
         return redirect(url_for("routes.index"))
+    
+    num_alt = None
+    alternativas = None
 
-    if request.method == "POST":
+    if request.method == "POST" and "num_alternativas" in request.form:
         num_alt = int(request.form["num_alternativas"])
         session["num_alternativas"] = num_alt
-        return redirect(url_for("routes.nombres_alternativas"))
-
-    return render_template("alternativas.html", criterios=criterios)
-
-
-# --------------------------
-# NOMBRES DE ALTERNATIVAS
-# --------------------------
-@routes.route("/nombres_alternativas", methods=["GET", "POST"])
-def nombres_alternativas():
-    num_alt = session.get("num_alternativas")
-
-    if num_alt is None:
+        session.pop("alternativas", None)
         return redirect(url_for("routes.alternativas"))
+    
+    if request.method == "POST" and "alt_0" in request.form:
+        alternativas = []
 
-    if request.method == "POST":
-        alternativas = [request.form[f"alternativa_{i}"] for i in range(num_alt)]
+        for i in range(num_alt):
+            nombre = request.form.get(f"alt_{i}")
+            if not nombre:
+                flash("Faltan nombres de alternativas")
+                return redirect(request.url)
+            alternativas.append(nombre)
+
         session["alternativas"] = alternativas
-        return redirect(url_for("routes.evaluacion"))
+        return redirect(url_for("routes.alternativas"))
+    return render_template(
+        "alternativas.html",
+        criterios = criterios,
+        num_alt=num_alt,
+        alternativas = alternativas
+    )
 
-    return render_template("nombres_alternativas.html", num_alternativas=num_alt)
-
-
-# --------------------------
-# MATRIZ DE EVALUACIÓN TOPSIS
-# --------------------------
-@routes.route("/evaluacion", methods=["GET", "POST"])
-def evaluacion():
+@routes.route("/matriz_topsis", methods=['GET','POST'])
+def matriz_topsis():
     criterios = session.get("criterios")
     alternativas = session.get("alternativas")
 
     if criterios is None or alternativas is None:
         return redirect(url_for("routes.index"))
-
+    
+    num_criterios = len(criterios)
     num_alt = len(alternativas)
-    num_crit = len(criterios)
 
     if request.method == "POST":
-        matriz = np.zeros((num_alt, num_crit))
-
+        matriz=[]
+        
         for i in range(num_alt):
-            for j in range(num_crit):
-                valor = float(request.form[f"cell_{i}_{j}"])
-                matriz[i][j] = valor
+            fila=[]
+            for j in range(num_criterios):
+                valor = request.form.get(f"cell_{i}_{j}")
+                if valor is None:
+                    flash("Faltan valores en la matriz")
+                    return redirect(request.url)
+                fila.append(float(valor))
+            matriz.append(fila)
 
-        session["matriz_evaluacion"] = matriz.tolist()
-        return redirect(url_for("routes.topsis"))
+        session["matriz_topsis"] = matriz
+        return redirect(url_for("routes.resultado_topsis"))
+    
+    return render_template(
+        "mat_topsis.html",
+        criterios=criterios,
+        alternativas=alternativas
+    )
 
-    return render_template("evaluacion.html", criterios=criterios, alternativas=alternativas)
-
-
-# --------------------------
-# TOPSIS
-# --------------------------
 @routes.route("/topsis")
 def topsis():
     criterios = session.get("criterios")
     alternativas = session.get("alternativas")
-    matriz = session.get("matriz_evaluacion")
+    matriz = session.get("matriz_topsis")
     pesos = session.get("pesos")
     tipos = session.get("tipos")
 
-    if None in (criterios, alternativas, matriz, pesos, tipos):
+    if None in(criterios,alternativas,matriz,pesos,tipos):
         return redirect(url_for("routes.index"))
-
+    
     matriz = np.array(matriz, dtype=float)
-    pesos = np.array(pesos, dtype=float)
+    pesos = np.array(pesos, type=float)
 
     denominadores = np.sqrt(np.sum(matriz**2, axis=0))
-    matriz_norm = matriz / denominadores
+    matriz_norm = matriz/denominadores
+
     matriz_pond = matriz_norm * pesos
 
     ideal_pos = np.array([
-        np.max(matriz_pond[:, j]) if tipos[j] == 'max' else np.min(matriz_pond[:, j])
-        for j in range(len(tipos))
-    ])
-    ideal_neg = np.array([
-        np.min(matriz_pond[:, j]) if tipos[j] == 'max' else np.max(matriz_pond[:, j])
+        np.max(matriz_pond[:,j]) if tipos[j] == 'max' else np.min(matriz_pond[:,j])
         for j in range(len(tipos))
     ])
 
-    dist_pos = np.sqrt(np.sum((matriz_pond - ideal_pos)**2, axis=1))
-    dist_neg = np.sqrt(np.sum((matriz_pond - ideal_neg)**2, axis=1))
+    ideal_neg = np.array([
+        np.min(matriz_pond[:,j]) if tipos[j] == 'max' else np.max(matriz_pond[:,j])
+        for j in range(len(tipos))
+    ])
+
+    dist_pos = np.sqrt(np.sum(matriz_pond - ideal_pos)**2, axis=1)
+    dist_neg = np.sqrt(np.sum(matriz_pond - ideal_neg)**2, axis =1)
 
     puntuaciones = dist_neg / (dist_pos + dist_neg)
     ranking = np.argsort(-puntuaciones)
 
-    resultados = [(alternativas[i], round(puntuaciones[i], 4)) for i in ranking]
+    resultados = [
+        (alternativas[i], round(puntuaciones[i],4))
+        for i in ranking
+    ]
 
-    return render_template("topsis_resultado.html", resultados=resultados)
+    return render_template(
+        "topsis_resultado.html",
+        criterios = criterios,
+        alternativas=alternativas,
+        matriz_norm=matriz_norm,
+        matriz_pond=matriz_pond,
+        ideal_pos=ideal_pos,
+        ideal_neg=ideal_neg,
+        resultados=resultados
+    )
+
+
+
+
+        

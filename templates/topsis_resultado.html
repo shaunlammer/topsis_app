@@ -1,29 +1,56 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Resultado TOPSIS</title>
+    <meta charset="UTF-8">
+    <title>Matriz TOPSIS</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h2>Ranking de alternativas (TOPSIS)</h2>
-<table>
-  <thead>
+    <h3>2. Matriz ponderada</h3>
+<table border="1">
     <tr>
-      <th>Posición</th>
-      <th>Alternativa</th>
-      <th>Puntaje</th>
+        <th>Alternativa</th>
+        {% for c in criterios %}<th>{{ c }}</th>{% endfor %}
     </tr>
-  </thead>
-  <tbody>
-    {% for resultado in resultados %}
-      <tr>
-        <td>{{ loop.index }}</td>  <!-- loop.index empieza en 1 -->
-        <td>{{ resultado[0] }}</td>
-        <td>{{ resultado[1] }}</td>
-      </tr>
+    {% for i in range(alternativas|length) %}
+    <tr>
+        <td>{{ alternativas[i] }}</td>
+        {% for j in range(criterios|length) %}
+            <td>{{ "%.4f"|format(matriz_pond[i][j]) }}</td>
+        {% endfor %}
+    </tr>
     {% endfor %}
-  </tbody>
 </table>
-    <a href="{{ url_for('routes.index') }}">Volver al inicio</a>
+
+<h3>3. Solución ideal positiva (A⁺)</h3>
+<ul>
+    {% for j in range(criterios|length) %}
+        <li>{{ criterios[j] }}: {{ "%.4f"|format(ideal_pos[j]) }}</li>
+    {% endfor %}
+</ul>
+
+<h3>4. Solución ideal negativa (A⁻)</h3>
+<ul>
+    {% for j in range(criterios|length) %}
+        <li>{{ criterios[j] }}: {{ "%.4f"|format(ideal_neg[j]) }}</li>
+    {% endfor %}
+</ul>
+
+<h3>5. Ranking final</h3>
+<table border="1">
+    <tr>
+        <th>Ranking</th>
+        <th>Alternativa</th>
+        <th>Puntuación</th>
+    </tr>
+    {% for alt, score in resultados %}
+    <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ alt }}</td>
+        <td>{{ score }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
 </body>
 </html>
