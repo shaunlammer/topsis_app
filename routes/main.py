@@ -65,6 +65,9 @@ def ahp():
         indice_max = np.argmax(valores.real)
         vector_eigen = vectores[:, indice_max].real
         pesos = vector_eigen / np.sum(vector_eigen)
+
+        session["pesos"] = pesos.tolist()
+
     return render_template(
     "ahp.html",
     criterios=criterios,
@@ -85,20 +88,31 @@ def alternativas():
         num_alt = int(request.form["num_alternativas"])
         session["num_alternativas"] = num_alt
         session.pop("alternativas", None)
-        return redirect(url_for("routes.alternativas"))
+        return render_template(
+            "alternativas.html",
+            criterios=criterios,
+            num_alt=num_alt,
+            alternativas=None
+        )
     
-    if request.method == "POST" and "alt_0" in request.form:
-        alternativas = []
-
-        for i in range(num_alt):
-            nombre = request.form.get(f"alt_{i}")
-            if not nombre:
-                flash("Faltan nombres de alternativas")
+    if "alt_0" in request.form:
+            num_alt = session.get("num_alternativas")
+            
+            if num_alt is None:
+                flash("Error: no se encontró el número de alternativas")
                 return redirect(request.url)
-            alternativas.append(nombre)
+            
+            alternativas = []
+            for i in range(num_alt):
+                nombre = request.form.get(f"alt_{i}")
+                if not nombre:
+                    flash("Faltan nombres de alternativas")
+                    return redirect(request.url)
+                alternativas.append(nombre)
 
-        session["alternativas"] = alternativas
-        return redirect(url_for("routes.alternativas"))
+            session["alternativas"] = alternativas
+            return redirect(url_for("routes.matriz_topsis"))
+
     return render_template(
         "alternativas.html",
         criterios = criterios,
@@ -131,7 +145,7 @@ def matriz_topsis():
             matriz.append(fila)
 
         session["matriz_topsis"] = matriz
-        return redirect(url_for("routes.resultado_topsis"))
+        return redirect(url_for("routes.topsis"))
     
     return render_template(
         "mat_topsis.html",
@@ -147,11 +161,19 @@ def topsis():
     pesos = session.get("pesos")
     tipos = session.get("tipos")
 
+    print("=== DEBUG TOPSIS ===")
+    print(f"criterios: {criterios}")
+    print(f"alternativas: {alternativas}")
+    print(f"matriz: {matriz}")
+    print(f"pesos: {pesos}")
+    print(f"tipos: {tipos}")
+    print("===================")
+
     if None in(criterios,alternativas,matriz,pesos,tipos):
         return redirect(url_for("routes.index"))
     
     matriz = np.array(matriz, dtype=float)
-    pesos = np.array(pesos, type=float)
+    pesos = np.array(pesos, dtype=float)
 
     denominadores = np.sqrt(np.sum(matriz**2, axis=0))
     matriz_norm = matriz/denominadores
@@ -168,8 +190,8 @@ def topsis():
         for j in range(len(tipos))
     ])
 
-    dist_pos = np.sqrt(np.sum(matriz_pond - ideal_pos)**2, axis=1)
-    dist_neg = np.sqrt(np.sum(matriz_pond - ideal_neg)**2, axis =1)
+    dist_pos = np.sqrt(np.sum((matriz_pond - ideal_pos)**2, axis=1))
+    dist_neg = np.sqrt(np.sum((matriz_pond - ideal_neg)**2, axis=1))
 
     puntuaciones = dist_neg / (dist_pos + dist_neg)
     ranking = np.argsort(-puntuaciones)

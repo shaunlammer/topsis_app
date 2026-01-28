@@ -1,64 +1,76 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Matriz de comparación AHP</title>
+    <meta charset="UTF-8">
+    <title>Matriz AHP</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div class="container"> 
+    <div class="container">
+        <h1>🎯 Análisis Jerárquico (AHP)</h1>
+        
         <h3>Llena la matriz de comparación por pares</h3>
-
+        
         <form method="POST">
-             <table class="matrix-table">
-            <tr>
-                <th></th>
-                {% for c in criterios %}
-                    <th>{{ c }}</th>
-                {% endfor %}
-            </tr>
-            {% for i in range(num_criterios) %}
-            <tr>
-                <th>{{ criterios[i] }}</th>
-                {% for j in range(num_criterios) %}
-                    <td>
-                        <input type="text"
-                              name="cell_{{ i }}_{{ j }}"
-                            value="{{ '1.00' if i == j else '' }}"
-                            required
-                            pattern="^(\d+(\.\d+)?|\d+\/\d+)$"
-                            title="Ingresa un número o fracción válida (ej. 2, 1.5, 3/4)">
-                    </td>
-                {% endfor %}
-            </tr>
-            {% endfor %}
-        </table>
+            <table class="matrix-table">
+                <thead>
+                    <tr>
+                        <th></th>
+                        {% for c in criterios %}
+                            <th>{{ c }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for i in range(num_criterios) %}
+                    <tr>
+                        <th>{{ criterios[i] }}</th>
+                        {% for j in range(num_criterios) %}
+                            <td>
+                                <input type="text"
+                                       name="cell_{{ i }}_{{ j }}"
+                                       value="{{ '1.00' if i == j else '' }}"
+                                       required
+                                       pattern="^(\d+(\.\d+)?|\d+\/\d+)$"
+                                       title="Ingresa un número o fracción válida (ej. 2, 1.5, 3/4)">
+                            </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
 
-        <div class="actions"> 
-            <input type="submit" value="Calcular pesos">
-        </div>
+            <div class="btn-container">
+                <button type="submit">🧮 Calcular pesos</button>
+            </div>
         </form>
 
         {% if pesos is not none %}
         <hr>
-
-        <h3>Pesos calculados con AHP</h3>
-
-            <table>
+        
+        <h3>✅ Pesos calculados con AHP</h3>
+        
+        <table class="result-table">
+            <thead>
                 <tr>
-                    <th>Criterio</th>
-                    <th>Peso</th>
+                    <th>CRITERIO</th>
+                    <th>PESO</th>
                 </tr>
-        {% for i in range(criterios|length) %}
+            </thead>
+            <tbody>
+                {% for i in range(criterios|length) %}
                 <tr>
-                    <td>{{ criterios[i] }}</td>
+                    <td><strong>{{ criterios[i] }}</strong></td>
                     <td>{{ "%.4f"|format(pesos[i]) }}</td>
                 </tr>
-        {% endfor %}
-</table>
-        <a href="{{ url_for('routes.alternativas') }}">
-    Continuar con TOPSIS
-</a>
-{% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="btn-container">
+            <a href="{{ url_for('routes.alternativas') }}" class="btn">➡️ Continuar con TOPSIS</a>
+        </div>
+        {% endif %}
     </div>
 </body>
 </html>

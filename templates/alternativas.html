@@ -5,36 +5,37 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h2>Alternativas</h2>
+    <div class="container">
+        <h2>Alternativas</h2>
 
-    {% if not num_alt %}
-    <form method="POST">
-        <label>¿Cuántas alternativas deseas evaluar?</label>
-        <input type="number" name="num_alternativas" min="2" required>
-        <button class="btn">Continuar</button>
-    </form>
-    {% endif %}
+        {% if not num_alt %}
+        <form method="POST">
+            <label>¿Cuántas alternativas deseas evaluar?</label>
+            <input type="number" name="num_alternativas" min="2" required>
+            <button class="btn" type="submit">Continuar</button>
+        </form>
+        {% endif %}
 
-    {% if num_alt and not alternativas %}
-    <form method="POST">
-        {% for i in range(num_alt) %}
-            <label>Alternativa {{ i + 1 }}</label>
-            <input type="text" name="alt_{{ i }}" required>
-        {% endfor %}
-        <button class="btn" type="submit">Guardar alternativas</button>
-    </form>
-    {% endif %}
+        {% if num_alt and not alternativas %}
+        <form method="POST">
+            {% for i in range(num_alt) %}
+                <label>Alternativa {{ i + 1 }}:</label>
+                <input type="text" name="alt_{{ i }}" required>
+            {% endfor %}
+            <button class="btn" type="submit">Continuar a Matriz</button>
+        </form>
+        {% endif %}
 
-    {% if alternativas %}
-    <h3>Alternativas registradas</h3>
-    <ul>
-        {% for alt in alternativas %}
-            <li>{{ alt }}</li>
-        {% endfor %}
-    </ul>
+        {% if alternativas %}
+        <h3>Alternativas registradas</h3>
+        <ul>
+            {% for alt in alternativas %}
+                <li>{{ alt }}</li>
+            {% endfor %}
+        </ul>
 
-    <a href="{{ url_for('routes.matriz_topsis') }}" class="btn">Continuar</a>
-    {% endif %}
-
+        <a href="{{ url_for('routes.matriz_topsis')}}" class="btn">Continuar a Matriz</a>
+        {% endif %}
+    </div>
 </body>
 </html>
