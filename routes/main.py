@@ -50,6 +50,7 @@ def index():
 
 @routes.route("/matriz", methods=["GET", "POST"])
 def ahp():
+  try:
     criterios = session.get('criterios')
     num_criterios = len(criterios)
     pesos = None
@@ -84,6 +85,10 @@ def ahp():
     num_criterios=num_criterios,
     pesos=pesos
 )
+  except Exception as e:
+        app.logger.error(f'Error en AHP: {e}')
+        flash("❌ Error al calcular los pesos AHP. Por favor, verifica los valores ingresados.")
+        return redirect(url_for("routes.index"))
 
 @routes.route("/alternativas", methods=['GET','POST'])
 def alternativas():
@@ -121,6 +126,7 @@ def alternativas():
                 alternativas.append(nombre)
 
             session["alternativas"] = alternativas
+            session.pop("num_alternativas", None)
             return redirect(url_for("routes.matriz_topsis"))
 
     return render_template(

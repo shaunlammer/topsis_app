@@ -362,3 +362,26 @@ a:hover {
     color: #2c3e50;
     margin-right: 10px;
 }
+
+/* ===== ERROR BOX ===== */
+.error-box {
+    text-align: center;
+    padding: 60px 40px;
+    background: linear-gradient(135deg, #ffe6e6, #ffcccc);
+    border-radius: 16px;
+    border: 3px solid #e74c3c;
+    box-shadow: 0 8px 25px rgba(231, 76, 60, 0.3);
+}
+
+.error-box h1 {
+    color: #c0392b;
+    font-size: 2.5em;
+    margin-bottom: 20px;
+}
+
+.error-message {
+    font-size: 1.2em;
+    color: #34495e;
+    margin: 20px 0;
+    line-height: 1.6;
+}
