@@ -18,6 +18,7 @@ def index():
         if 'criterios' in request.form:
             num_criterios = int(request.form['criterios'])
             session["num_criterios"] = num_criterios
+            return redirect(url_for('routes.index'))
 
         if 'criterio_0' in request.form:
             num_criterios = session.get('num_criterios')
@@ -37,6 +38,7 @@ def index():
             tipos = [request.form.get(f"tipo_{i}", "max") for i in range(num_criterios)]
             session["criterios"] = criterios
             session["tipos"] = tipos
+            session.pop('num_criterios', None)
             return redirect(url_for("routes.ahp"))
         
     return render_template(
@@ -74,7 +76,7 @@ def ahp():
 
         session["matriz_ahp"] = matriz
         session["pesos"] = pesos.tolist()
-        return redirect(url_for("routes.alternativas"))
+        
 
     return render_template(
     "ahp.html",
