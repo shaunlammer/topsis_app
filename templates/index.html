@@ -65,7 +65,13 @@
 
             <div class="form-row">
                 <label>Número de criterios:</label>
-                <input type="number" name="criterios" min="2" max="10" required>
+                <input type="number" 
+                       name="criterios" 
+                       min="2" 
+                       max="10" required
+                       step="1"
+                       oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                       required>
                 <button type="submit" class="btn">Iniciar</button>
             </div>
         </form>

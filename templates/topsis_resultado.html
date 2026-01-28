@@ -72,9 +72,12 @@
                 
                 <div class="form-row">
                     <label>Registro Académico:</label>
-                    <input type="text" name="registro_academico" 
+                    <input type="text" 
+                           name="registro_academico" 
                            placeholder="Ej: 202030824" 
                            pattern="[0-9]{9}" 
+                           maxlength="9"
+                           oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 9)"
                            title="Debe ser un número de 9 dígitos"
                            required>
                 </div>
@@ -85,9 +88,7 @@
                         <option value="">-- Selecciona un curso --</option>
                         <option value="Investigación de Operaciones 1">Investigación de Operaciones 1</option>
                         <option value="Investigación de Operaciones 2">Investigación de Operaciones 2</option>
-                        <option value="Análisis de Decisiones">Análisis de Decisiones</option>
-                        <option value="Gestión de Operaciones">Gestión de Operaciones</option>
-                        <option value="Métodos Cuantitativos">Métodos Cuantitativos</option>
+                        <option value="Análisis de Decisiones">Ingenieria de Plantas</option>
                         <option value="Otro">Otro</option>
                     </select>
                 </div>

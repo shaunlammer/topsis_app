@@ -6,10 +6,28 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash flash-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
     <div class="container">
         <h1>🎯 Análisis Jerárquico (AHP)</h1>
         
         <h3>Llena la matriz de comparación por pares</h3>
+        <p style="color: #7f8c8d; margin-bottom: 20px;">
+            <strong>Escala:</strong> 1 = Igual importancia | 3 = Moderadamente más importante | 
+            5 = Fuertemente más importante | 7 = Muy fuertemente más importante | 
+            9 = Extremadamente más importante<br>
+            <em>💡 Tip: Puedes usar fracciones como 1/3, 1/2, etc.</em>
+        </p>
         
         <form method="POST">
             <table class="matrix-table">
@@ -29,10 +47,12 @@
                             <td>
                                 <input type="text"
                                        name="cell_{{ i }}_{{ j }}"
+                                       class="ahp-input"
                                        value="{{ '1.00' if i == j else '' }}"
-                                       required
-                                       pattern="^(\d+(\.\d+)?|\d+\/\d+)$"
-                                       title="Ingresa un número o fracción válida (ej. 2, 1.5, 3/4)">
+                                       onblur="convertirFraccion(this)"
+                                       oninput="validarEntrada(this)"
+                                       {% if i == j %}readonly style="background: #ecf0f1; font-weight: bold;"{% endif %}
+                                       required>
                             </td>
                         {% endfor %}
                     </tr>
@@ -72,5 +92,107 @@
         </div>
         {% endif %}
     </div>
+
+    <script>
+    function validarEntrada(input) {
+        
+        input.value = input.value.replace(/[^0-9.\/]/g, '');
+        
+        
+        const puntos = (input.value.match(/\./g) || []).length;
+        const barras = (input.value.match(/\//g) || []).length;
+        
+        if (puntos > 1) {
+            input.value = input.value.substring(0, input.value.lastIndexOf('.'));
+        }
+        
+        if (barras > 1) {
+            input.value = input.value.substring(0, input.value.lastIndexOf('/'));
+        }
+    }
+
+    function convertirFraccion(input) {
+        
+        if (input.value === '' || input.readOnly) return;
+        
+        const valor = input.value.trim();
+        
+        
+        if (valor.includes('/')) {
+            try {
+                const partes = valor.split('/');
+                const numerador = parseFloat(partes[0]);
+                const denominador = parseFloat(partes[1]);
+                
+                // Validar que sean números válidos
+                if (isNaN(numerador) || isNaN(denominador) || denominador === 0) {
+                    input.value = '';
+                    alert('⚠️ Fracción inválida. Usa formato: numerador/denominador (ej: 1/3)');
+                    input.focus();
+                    return;
+                }
+                
+                const resultado = numerador / denominador;
+                
+                
+                if (resultado < 0.11 || resultado > 9) {
+                    input.value = '';
+                    alert('⚠️ El valor debe estar entre 0.11 y 9');
+                    input.focus();
+                    return;
+                }
+                
+                input.value = resultado.toFixed(2);
+                
+                input.style.background = '#d5f4e6';
+                setTimeout(() => {
+                    input.style.background = '';
+                }, 500);
+                
+            } catch (error) {
+                input.value = '';
+                alert('⚠️ Error al convertir la fracción');
+                input.focus();
+            }
+        } else {
+            const numero = parseFloat(valor);
+            
+            if (isNaN(numero)) {
+                input.value = '';
+                alert('⚠️ Por favor ingresa un número válido');
+                input.focus();
+                return;
+            }
+            
+            if (numero < 0.11 || numero > 9) {
+                input.value = '';
+                alert('⚠️ El valor debe estar entre 0.11 y 9');
+                input.focus();
+                return;
+            }
+            
+            input.value = numero.toFixed(2);
+        }
+    }
+
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const inputs = document.querySelectorAll('.ahp-input:not([readonly])');
+        let valido = true;
+        
+        inputs.forEach(input => {
+            if (input.value === '') {
+                valido = false;
+                input.style.border = '2px solid red';
+            } else {
+                input.style.border = '';
+            }
+        });
+        
+        if (!valido) {
+            e.preventDefault();
+            alert('⚠️ Por favor completa todos los campos de la matriz');
+        }
+    });
+    </script>
 </body>
 </html>
