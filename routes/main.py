@@ -1,11 +1,16 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 import numpy as np
+import sys
+import os 
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from database import obtener_historial, CATEGORIAS_CIIU
 
 routes = Blueprint('routes', __name__)
 
 @routes.route('/', methods=['GET', 'POST'])
 def index():
-    historial = []
+    historial = obtener_historial()
     num_criterios = None
 
     if request.method == 'POST':
@@ -37,7 +42,8 @@ def index():
     return render_template(
         "index.html",
         historial=historial,
-        num_criterios=num_criterios
+        num_criterios=num_criterios,
+        categorias_ciiu=CATEGORIAS_CIIU
         )
 
 @routes.route("/matriz", methods=["GET", "POST"])
@@ -160,7 +166,7 @@ def topsis():
     matriz = session.get("matriz_topsis")
     pesos = session.get("pesos")
     tipos = session.get("tipos")
-    
+
     if None in(criterios,alternativas,matriz,pesos,tipos):
         return redirect(url_for("routes.index"))
     
