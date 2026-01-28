@@ -59,7 +59,7 @@ def ahp():
             fila = []
             for j in range(num_criterios):
                 valor = request.form.get(f'cell_{i}_{j}')
-                fila.append(valor)
+                fila.append(float(valor))
             matriz.append(fila)
 
         matriz = np.array(matriz, dtype=float)
@@ -201,6 +201,12 @@ def topsis():
         for i in ranking
     ]
 
+    session["matriz_normalizada"] = matriz_norm.tolist()
+    session["matriz_ponderada"] = matriz_pond.tolist()
+    session["ideal_positivo"] = ideal_pos.tolist()
+    session["ideal_negativo"] = ideal_neg.tolist()
+    session["ranking_final"] = resultados
+
     return render_template(
         "topsis_resultado.html",
         criterios = criterios,
@@ -215,56 +221,26 @@ def topsis():
 @routes.route("/guardar_analisis", methods=['POST'])
 def guardar_analisis_route():
     from database import guardar_analisis
-   
+    
     registro_academico = request.form.get('registro_academico')
     curso = request.form.get('curso')
     descripcion = request.form.get('descripcion')
     
-
     criterios = session.get("criterios")
     tipos = session.get("tipos")
-    matriz_ahp = session.get("matriz_ahp")  
+    matriz_ahp = session.get("matriz_ahp", [])
     pesos = session.get("pesos")
     alternativas = session.get("alternativas")
     matriz_evaluacion = session.get("matriz_topsis")
     categoria_ciiu = session.get("categoria_ciiu", "")
     
-  
-    matriz = np.array(matriz_evaluacion, dtype=float)
-    pesos_array = np.array(pesos, dtype=float)
+    matriz_normalizada = session.get("matriz_normalizada")
+    matriz_ponderada = session.get("matriz_ponderada")
+    ideal_positivo = session.get("ideal_positivo")
+    ideal_negativo = session.get("ideal_negativo")
+    ranking_final = session.get("ranking_final")
     
 
-    denominadores = np.sqrt(np.sum(matriz**2, axis=0))
-    matriz_norm = matriz / denominadores
-    
-    
-    matriz_pond = matriz_norm * pesos_array
-    
-    
-    ideal_pos = np.array([
-        np.max(matriz_pond[:, j]) if tipos[j] == 'max' else np.min(matriz_pond[:, j])
-        for j in range(len(tipos))
-    ])
-    
-    ideal_neg = np.array([
-        np.min(matriz_pond[:, j]) if tipos[j] == 'max' else np.max(matriz_pond[:, j])
-        for j in range(len(tipos))
-    ])
-    
-   
-    dist_pos = np.sqrt(np.sum((matriz_pond - ideal_pos)**2, axis=1))
-    dist_neg = np.sqrt(np.sum((matriz_pond - ideal_neg)**2, axis=1))
-    
-    
-    puntuaciones = dist_neg / (dist_pos + dist_neg)
-    ranking = np.argsort(-puntuaciones)
-    
-    resultados = [
-        (alternativas[i], round(float(puntuaciones[i]), 4))
-        for i in ranking
-    ]
-    
-    
     datos = {
         'nombre_analisis': descripcion,
         'registro_academico': registro_academico,
@@ -272,18 +248,17 @@ def guardar_analisis_route():
         'categoria_ciiu': categoria_ciiu,
         'criterios': criterios,
         'tipos_criterios': tipos,
-        'matriz_ahp': matriz_ahp if matriz_ahp else [],
+        'matriz_ahp': matriz_ahp,
         'pesos_ahp': pesos,
         'alternativas': alternativas,
         'matriz_evaluacion': matriz_evaluacion,
-        'matriz_normalizada': matriz_norm.tolist(),
-        'matriz_ponderada': matriz_pond.tolist(),
-        'ideal_positivo': ideal_pos.tolist(),
-        'ideal_negativo': ideal_neg.tolist(),
-        'ranking_final': resultados
+        'matriz_normalizada': matriz_normalizada,
+        'matriz_ponderada': matriz_ponderada,
+        'ideal_positivo': ideal_positivo,
+        'ideal_negativo': ideal_negativo,
+        'ranking_final': ranking_final
     }
-    
-    
+   
     resultado = guardar_analisis(datos)
     
     if resultado:
@@ -291,9 +266,8 @@ def guardar_analisis_route():
         session.clear()
         return redirect(url_for('routes.index'))
     else:
-        flash('❌ Error al guardar el análisis')
+        flash('Error al guardar el análisis')
         return redirect(url_for('routes.topsis'))
-    
 
 
 
