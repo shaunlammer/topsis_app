@@ -72,7 +72,9 @@ def ahp():
         vector_eigen = vectores[:, indice_max].real
         pesos = vector_eigen / np.sum(vector_eigen)
 
+        session["matriz_ahp"] = matriz
         session["pesos"] = pesos.tolist()
+        return redirect(url_for("routes.alternativas"))
 
     return render_template(
     "ahp.html",
@@ -292,7 +294,7 @@ def guardar_analisis_route():
         flash('❌ Error al guardar el análisis')
         return redirect(url_for('routes.topsis'))
     
-    
+
 
 
 
