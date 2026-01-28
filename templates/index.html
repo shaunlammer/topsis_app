@@ -6,38 +6,68 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-
     <div class="container">
 
-        <h2>Matriz TOPSIS – Historial de consultas</h2>
+        <h1>🎯 Sistema de Análisis TOPSIS</h1>
+        <h2>Historial de Análisis</h2>
 
+        {% if historial %}
         <table class="result-table">
-            <tr>
-                <th>#</th>
-                <th>Fecha</th>
-                <th>Criterios</th>
-                <th>Resultados</th>
-            </tr>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Fecha</th>
+                    <th>Registro</th>
+                    <th>Curso</th>
+                    <th>Análisis</th>
+                    <th>Mejor Alternativa</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
             <tbody>
                 {% for consulta in historial %}
                 <tr>
                     <td>{{ loop.index }}</td>
-                    <td>{{ consulta.fecha }}</td>
-                    <td>{{ consulta.criterios }}</td>
-                    <td>{{ consulta.resultado }}</td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="4">No hay consultas registradas</td>
+                    <td>{{ consulta.fecha_creacion }}</td>
+                    <td>{{ consulta.registro_academico }}</td>
+                    <td>{{ consulta.curso }}</td>
+                    <td>{{ consulta.nombre_analisis }}</td>
+                    <td><strong>{{ consulta.ranking_final[0][0] }}</strong></td>
+                    <td>
+                        <a href="{{ url_for('routes.ver_analisis', id=consulta.id) }}" class="btn-small">👁️ Ver</a>
+                        <a href="{{ url_for('routes.eliminar_analisis', id=consulta.id) }}" 
+                           class="btn-small btn-danger" 
+                           onclick="return confirm('¿Eliminar este análisis?')">🗑️</a>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+        {% else %}
+        <p style="text-align: center; color: #7f8c8d; padding: 20px;">
+            📋 No hay análisis guardados aún. ¡Crea tu primer análisis!
+        </p>
+        {% endif %}
+
+        <hr>
+
+        <h2>🆕 Nuevo Análisis TOPSIS</h2>
 
         <form method="POST">
-            <label>Número de criterios:</label>
-            <input type="number" name="criterios" min="2" required>
-            <button type="submit" class="btn">Iniciar</button>
+            <div class="form-row">
+                <label>Categoría CIIU:</label>
+                <select name="categoria_ciiu" required>
+                    {% for key, value in categorias_ciiu.items() %}
+                        <option value="{{ key }}">{{ value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-row">
+                <label>Número de criterios:</label>
+                <input type="number" name="criterios" min="2" max="10" required>
+                <button type="submit" class="btn">Iniciar</button>
+            </div>
         </form>
 
         {% if num_criterios %}
@@ -59,7 +89,9 @@
             </div>
             {% endfor %}
             
-            <button type="submit" class="btn">Continuar a AHP</button>
+            <div class="btn-container">
+                <button type="submit" class="btn">Continuar a AHP</button>
+            </div>
         </form>
         {% endif %}
     </div>
