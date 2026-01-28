@@ -63,8 +63,50 @@
             </tbody>
         </table>
 
-        <div style="text-align: center; margin-top: 40px;">
-            <a href="{{ url_for('routes.index') }}" class="btn">🔄 Nuevo Análisis</a>
+        <hr style="margin: 40px 0;">
+
+        <!-- FORMULARIO DE GUARDADO -->
+        <div class="save-form">
+            <h2>💾 Guardar este análisis</h2>
+            <form method="POST" action="{{ url_for('routes.guardar_analisis_route') }}">
+                
+                <div class="form-row">
+                    <label>Registro Académico:</label>
+                    <input type="text" name="registro_academico" 
+                           placeholder="Ej: 202030824" 
+                           pattern="[0-9]{9}" 
+                           title="Debe ser un número de 9 dígitos"
+                           required>
+                </div>
+
+                <div class="form-row">
+                    <label>Curso:</label>
+                    <select name="curso" required>
+                        <option value="">-- Selecciona un curso --</option>
+                        <option value="Investigación de Operaciones 1">Investigación de Operaciones 1</option>
+                        <option value="Investigación de Operaciones 2">Investigación de Operaciones 2</option>
+                        <option value="Análisis de Decisiones">Análisis de Decisiones</option>
+                        <option value="Gestión de Operaciones">Gestión de Operaciones</option>
+                        <option value="Métodos Cuantitativos">Métodos Cuantitativos</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <label>Descripción del análisis:</label>
+                    <input type="text" name="descripcion" 
+                           placeholder="Ej: Selección de proveedor textil" 
+                           maxlength="200"
+                           required>
+                </div>
+
+                <div class="btn-container" style="margin-top: 20px;">
+                    <button type="submit" class="btn">💾 Guardar Análisis</button>
+                    <a href="{{ url_for('routes.index') }}" class="btn" style="background: linear-gradient(135deg, #95a5a6, #7f8c8d);">
+                        🔄 Nuevo Análisis (sin guardar)
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
 </body>

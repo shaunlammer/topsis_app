@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Ver Análisis - {{ analisis.nombre_analisis }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Detalle del Análisis</h1>
+        
+        <div class="info-card">
+            <h3>Información General</h3>
+            <p><strong>Nombre:</strong> {{ analisis.nombre_analisis }}</p>
+            <p><strong>Registro Académico:</strong> {{ analisis.registro_academico }}</p>
+            <p><strong>Curso:</strong> {{ analisis.curso }}</p>
+            <p><strong>Fecha:</strong> {{ analisis.fecha_creacion }}</p>
+            <p><strong>Categoría CIIU:</strong> {{ analisis.categoria_ciiu }}</p>
+        </div>
+
+        <h3>Criterios y Pesos</h3>
+        <table class="result-table">
+            <thead>
+                <tr>
+                    <th>Criterio</th>
+                    <th>Tipo</th>
+                    <th>Peso</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in range(analisis.criterios|length) %}
+                <tr>
+                    <td><strong>{{ analisis.criterios[i] }}</strong></td>
+                    <td>{{ 'Maximizar' if analisis.tipos_criterios[i] == 'max' else 'Minimizar' }}</td>
+                    <td>{{ "%.4f"|format(analisis.pesos_ahp[i]) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h3>Matriz de Evaluación</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Alternativa</th>
+                    {% for c in analisis.criterios %}<th>{{ c }}</th>{% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in range(analisis.alternativas|length) %}
+                <tr>
+                    <td><strong>{{ analisis.alternativas[i] }}</strong></td>
+                    {% for j in range(analisis.criterios|length) %}
+                        <td>{{ analisis.matriz_evaluacion[i][j] }}</td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h3>🏆 Ranking Final</h3>
+        <table class="result-table">
+            <thead>
+                <tr>
+                    <th>Posición</th>
+                    <th>Alternativa</th>
+                    <th>Puntuación</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for alt, score in analisis.ranking_final %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td><strong>{{ alt }}</strong></td>
+                    <td>{{ score }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="btn-container" style="margin-top: 30px;">
+            <a href="{{ url_for('routes.index') }}" class="btn">🔙 Volver al Inicio</a>
+            <a href="{{ url_for('routes.eliminar_analisis', id=analisis.id) }}" 
+               class="btn btn-danger" 
+               onclick="return confirm('¿Estás seguro de eliminar este análisis?')">
+               🗑️ Eliminar
+            </a>
+        </div>
+    </div>
+</body>
+</html>

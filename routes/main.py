@@ -269,6 +269,34 @@ def guardar_analisis_route():
         flash('Error al guardar el análisis')
         return redirect(url_for('routes.topsis'))
 
+@routes.route("/ver_analisis/<int:id>")
+def ver_analisis(id):
+    from database import obtener_analisis_por_id
+    
+    analisis = obtener_analisis_por_id(id)
+    
+    if not analisis:
+        flash("Análisis no encontrado")
+        return redirect(url_for('routes.index'))
+    
+    return render_template(
+        "ver_analisis.html",
+        analisis=analisis
+    )
+
+@routes.route("/eliminar_analisis/<int:id>")
+def eliminar_analisis(id):
+    from database import eliminar_analisis as eliminar_db
+    
+    resultado = eliminar_db(id)
+    
+    if resultado:
+        flash("Análisis eliminado correctamente")
+    else:
+        flash("Error al eliminar el análisis")
+    
+    return redirect(url_for('routes.index'))
+
 
 
 
