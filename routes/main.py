@@ -62,9 +62,9 @@ def ahp():
                 fila.append(float(valor))
             matriz.append(fila)
 
-        matriz = np.array(matriz, dtype=float)
+        matriz_array = np.array(matriz, dtype=float)
 
-        valores, vectores = np.linalg.eig(matriz)
+        valores, vectores = np.linalg.eig(matriz_array)
         valores = np.real_if_close(valores)
         vectores = np.real_if_close(vectores)
 
