@@ -160,15 +160,7 @@ def topsis():
     matriz = session.get("matriz_topsis")
     pesos = session.get("pesos")
     tipos = session.get("tipos")
-
-    print("=== DEBUG TOPSIS ===")
-    print(f"criterios: {criterios}")
-    print(f"alternativas: {alternativas}")
-    print(f"matriz: {matriz}")
-    print(f"pesos: {pesos}")
-    print(f"tipos: {tipos}")
-    print("===================")
-
+    
     if None in(criterios,alternativas,matriz,pesos,tipos):
         return redirect(url_for("routes.index"))
     
