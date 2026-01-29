@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 from routes.main import routes
 
 app = Flask(__name__)
@@ -23,5 +23,5 @@ def handle_exception(error):
     return render_template('error.html', 
                          mensaje="Ha ocurrido un error inesperado. El equipo técnico ha sido notificado."), 500
 
- if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+if __name__ == "__main__":
+ app.run(debug=True, port=5000)

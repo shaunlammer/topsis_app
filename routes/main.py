@@ -15,9 +15,13 @@ def index():
 
     if request.method == 'POST':
         
-        if 'criterios' in request.form:
+        if 'criterios' in request.form and 'categorias_ciiu' in request.form:
             num_criterios = int(request.form['criterios'])
+            categoria_ciiu = request.form['categoria_ciiu']
+            
             session["num_criterios"] = num_criterios
+            session["categoria_ciiu"] = categoria_ciiu            
+            
             return redirect(url_for('routes.index'))
 
         if 'criterio_0' in request.form:
@@ -50,79 +54,103 @@ def index():
 
 @routes.route("/matriz", methods=["GET", "POST"])
 def ahp():
-  try:
-    criterios = session.get('criterios')
-    num_criterios = len(criterios)
-    pesos = None
-
-    if request.method == 'POST':
-        matriz = []
-
-        for i in range(num_criterios):
-            fila = []
-            for j in range(num_criterios):
-                valor = request.form.get(f'cell_{i}_{j}')
-                fila.append(float(valor))
-            matriz.append(fila)
-
-        matriz_array = np.array(matriz, dtype=float)
-
-        valores, vectores = np.linalg.eig(matriz_array)
-        valores = np.real_if_close(valores)
-        vectores = np.real_if_close(vectores)
-
-        indice_max = np.argmax(valores.real)
-        vector_eigen = vectores[:, indice_max].real
-        pesos = vector_eigen / np.sum(vector_eigen)
-
-        session["matriz_ahp"] = matriz
-        session["pesos"] = pesos.tolist()
+    try:
+        criterios = session.get('criterios')
+        if criterios is None:
+            flash("No se encontraron criterios.", 'warning')
+            return redirect(url_for("routes.index"))
         
+        num_criterios = len(criterios)
+        pesos = None
 
-    return render_template(
-    "ahp.html",
-    criterios=criterios,
-    num_criterios=num_criterios,
-    pesos=pesos
-)
-  except Exception as e:
-        app.logger.error(f'Error en AHP: {e}')
-        flash("❌ Error al calcular los pesos AHP. Por favor, verifica los valores ingresados.")
+        if request.method == 'POST':
+            matriz = []
+
+            for i in range(num_criterios):
+                fila = []
+                for j in range(num_criterios):
+                    valor = request.form.get(f'cell_{i}_{j}')
+                    
+                    try:
+                        # Convertir fracción a decimal si tiene /
+                        if '/' in valor:
+                            numerador, denominador = valor.split('/')
+                            valor_float = float(numerador) / float(denominador)
+                        else:
+                            valor_float = float(valor)
+                        
+                        # Validar rango
+                        if valor_float < 0.11 or valor_float > 9:
+                            flash(f"El valor en fila {i+1}, columna {j+1} debe estar entre 0.11 y 9", 'warning')
+                            return redirect(request.url)
+                        
+                        fila.append(valor_float)
+                        
+                    except (ValueError, TypeError, ZeroDivisionError):  # ← Cerrar el try interno
+                        flash(f"Valor inválido en fila {i+1}, columna {j+1}", 'error')
+                        return redirect(request.url)
+                
+                matriz.append(fila)
+
+            matriz_array = np.array(matriz, dtype=float)
+
+            valores, vectores = np.linalg.eig(matriz_array)
+            valores = np.real_if_close(valores)
+            vectores = np.real_if_close(vectores)
+
+            indice_max = np.argmax(valores.real)
+            vector_eigen = vectores[:, indice_max].real
+            pesos = vector_eigen / np.sum(vector_eigen)
+
+            session["matriz_ahp"] = matriz
+            session["pesos"] = pesos.tolist()
+            
+            flash('✅ Pesos calculados exitosamente', 'success')
+
+        return render_template(
+            "ahp.html",
+            criterios=criterios,
+            num_criterios=num_criterios,
+            pesos=pesos
+        )
+    
+    except Exception as e:  # ← Cerrar el try externo
+        print(f'Error en AHP: {e}')
+        flash("❌ Error al calcular los pesos AHP. Por favor, verifica los valores ingresados.", 'error')
         return redirect(url_for("routes.index"))
 
 @routes.route("/alternativas", methods=['GET','POST'])
 def alternativas():
     criterios = session.get("criterios")
     if criterios is None:
+        flash("⚠️ No se encontraron criterios.", 'warning')
         return redirect(url_for("routes.index"))
     
-    num_alt = None
-    alternativas = None
+    num_alt = session.get("num_alternativas")
+    alternativas = session.get("alternativas")
 
-    if request.method == "POST" and "num_alternativas" in request.form:
-        num_alt = int(request.form["num_alternativas"])
-        session["num_alternativas"] = num_alt
-        session.pop("alternativas", None)
-        return render_template(
-            "alternativas.html",
-            criterios=criterios,
-            num_alt=num_alt,
-            alternativas=None
-        )
-    
-    if "alt_0" in request.form:
+    if request.method == "POST":
+        # Paso 1: Guardar número de alternativas
+        if "num_alternativas" in request.form:
+            num_alt = int(request.form["num_alternativas"])
+            session["num_alternativas"] = num_alt
+            session.pop("alternativas", None)
+            return redirect(url_for("routes.alternativas"))  # ← Redirigir
+        
+        # Paso 2: Guardar nombres de alternativas
+        if "alt_0" in request.form:
             num_alt = session.get("num_alternativas")
             
             if num_alt is None:
-                flash("Error: no se encontró el número de alternativas")
-                return redirect(request.url)
+                flash("⚠️ Error: no se encontró el número de alternativas", 'warning')
+                return redirect(url_for("routes.alternativas"))
             
             alternativas = []
             for i in range(num_alt):
                 nombre = request.form.get(f"alt_{i}")
                 if not nombre:
-                    flash("Faltan nombres de alternativas")
-                    return redirect(request.url)
+                    flash("⚠️ Faltan nombres de alternativas", 'warning')
+                    return redirect(url_for("routes.alternativas"))
                 alternativas.append(nombre)
 
             session["alternativas"] = alternativas
@@ -131,9 +159,9 @@ def alternativas():
 
     return render_template(
         "alternativas.html",
-        criterios = criterios,
+        criterios=criterios,
         num_alt=num_alt,
-        alternativas = alternativas
+        alternativas=alternativas
     )
 
 @routes.route("/matriz_topsis", methods=['GET','POST'])
