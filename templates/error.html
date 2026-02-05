@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Error - TOPSIS</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="error-box">
+            <h1>⚠️ Oops... Algo salió mal</h1>
+            <p class="error-message">{{ mensaje }}</p>
+            
+            <div class="btn-container" style="margin-top: 30px;">
+                <a href="{{ url_for('routes.index') }}" class="btn">🏠 Volver al Inicio</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
