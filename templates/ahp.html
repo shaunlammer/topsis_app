@@ -122,6 +122,35 @@
 
 {% block scripts %}
 <script>
+function mostrarError(input, mensaje) {
+    limpiarError(input);
+    input.classList.add('input-error');
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'ahp-error-msg';
+    errorDiv.textContent = mensaje;
+    input.parentElement.appendChild(errorDiv);
+}
+
+function limpiarError(input) {
+    input.classList.remove('input-error');
+    const errorExistente = input.parentElement.querySelector('.ahp-error-msg');
+    if (errorExistente) errorExistente.remove();
+}
+
+function mostrarErrorGeneral(mensaje) {
+    let banner = document.getElementById('ahp-error-banner');
+    if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'ahp-error-banner';
+        banner.className = 'ahp-error-banner';
+        const form = document.querySelector('form');
+        form.parentElement.insertBefore(banner, form);
+    }
+    banner.textContent = mensaje;
+    banner.style.display = 'block';
+    setTimeout(() => { banner.style.display = 'none'; }, 5000);
+}
+
 function validarEntrada(input) {
     input.value = input.value.replace(/[^0-9.\/]/g, '');
     const puntos = (input.value.match(/\./g) || []).length;
@@ -132,6 +161,9 @@ function validarEntrada(input) {
     if (barras > 1) {
         input.value = input.value.substring(0, input.value.lastIndexOf('/'));
     }
+    if (input.value.length > 0) {
+        limpiarError(input);
+    }
 }
 
 function convertirFraccion(input) {
@@ -139,45 +171,47 @@ function convertirFraccion(input) {
     const valor = input.value.trim();
     
     if (valor.includes('/')) {
-        try {
-            const partes = valor.split('/');
-            const numerador = parseFloat(partes[0]);
-            const denominador = parseFloat(partes[1]);
-            if (isNaN(numerador) || isNaN(denominador) || denominador === 0) {
-                input.value = '';
-                alert('Fracción inválida. Usa formato: numerador/denominador (ej: 1/3)');
-                input.focus();
-                return;
-            }
-            const resultado = numerador / denominador;
-            if (resultado < 0.11 || resultado > 9) {
-                input.value = '';
-                alert('El valor debe estar entre 0.11 y 9');
-                input.focus();
-                return;
-            }
-            input.value = resultado.toFixed(2);
-            input.style.background = '#dbeafe';
-            setTimeout(() => { input.style.background = ''; }, 500);
-        } catch (error) {
+        const partes = valor.split('/');
+        if (partes.length !== 2) {
             input.value = '';
-            alert('Error al convertir la fracción');
+            mostrarError(input, 'Formato: numerador/denominador (ej: 1/3)');
             input.focus();
+            return;
         }
+        const numerador = parseFloat(partes[0]);
+        const denominador = parseFloat(partes[1]);
+        if (isNaN(numerador) || isNaN(denominador) || denominador === 0) {
+            input.value = '';
+            mostrarError(input, 'Fracción inválida. Ej: 1/3, 1/5');
+            input.focus();
+            return;
+        }
+        const resultado = numerador / denominador;
+        if (resultado < 0.11 || resultado > 9) {
+            input.value = '';
+            mostrarError(input, 'Valor fuera de rango (0.11 – 9)');
+            input.focus();
+            return;
+        }
+        limpiarError(input);
+        input.value = resultado.toFixed(2);
+        input.style.background = '#dbeafe';
+        setTimeout(() => { input.style.background = ''; }, 500);
     } else {
         const numero = parseFloat(valor);
         if (isNaN(numero)) {
             input.value = '';
-            alert('Por favor ingresa un número válido');
+            mostrarError(input, 'Ingresa un número válido');
             input.focus();
             return;
         }
         if (numero < 0.11 || numero > 9) {
             input.value = '';
-            alert('El valor debe estar entre 0.11 y 9');
+            mostrarError(input, 'Valor fuera de rango (0.11 – 9)');
             input.focus();
             return;
         }
+        limpiarError(input);
         input.value = numero.toFixed(2);
     }
 }
@@ -185,17 +219,38 @@ function convertirFraccion(input) {
 document.querySelector('form').addEventListener('submit', function(e) {
     const inputs = document.querySelectorAll('.ahp-input:not([readonly])');
     let valido = true;
+    let primerError = null;
+
     inputs.forEach(input => {
-        if (input.value === '') {
+        limpiarError(input);
+        const valor = input.value.trim();
+
+        if (valor === '') {
             valido = false;
-            input.style.border = '2px solid #b91c1c';
-        } else {
-            input.style.border = '';
+            mostrarError(input, 'Requerido');
+            if (!primerError) primerError = input;
+            return;
+        }
+
+        const numero = parseFloat(valor);
+        if (isNaN(numero)) {
+            valido = false;
+            mostrarError(input, 'No es un número');
+            if (!primerError) primerError = input;
+            return;
+        }
+
+        if (numero < 0.11 || numero > 9) {
+            valido = false;
+            mostrarError(input, 'Rango: 0.11 – 9');
+            if (!primerError) primerError = input;
         }
     });
+
     if (!valido) {
         e.preventDefault();
-        alert('Por favor completa todos los campos de la matriz');
+        mostrarErrorGeneral('Corrige los campos marcados en rojo antes de continuar.');
+        if (primerError) primerError.focus();
     }
 });
 </script>

@@ -25,6 +25,13 @@ def index():
         # Primera fase: capturar TODOS los datos iniciales
         if 'criterios' in request.form and 'categoria_ciiu' in request.form:
             session['num_criterios'] = int(request.form['criterios'])
+            
+            # Validar rango server-side
+            if session['num_criterios'] < 2 or session['num_criterios'] > 10:
+                flash("El número de criterios debe estar entre 2 y 10", "error")
+                session.pop('num_criterios', None)
+                return redirect(url_for('routes.index'))
+            
             session['categoria_ciiu'] = request.form['categoria_ciiu']
             session['registro_academico'] = request.form.get('registro_academico', '')
             session['curso'] = request.form.get('curso', '')
@@ -51,7 +58,7 @@ def index():
                     flash(f"Falta el nombre del criterio {i+1}", "error")
                     return redirect(url_for('routes.index'))
 
-                criterios.append(nombre)
+                criterios.append(nombre.strip()[:100])
                 tipos.append(tipo)
 
             session['criterios'] = criterios
@@ -147,7 +154,16 @@ def alternativas():
 
     if request.method == "POST":
         if "num_alternativas" in request.form:
-            num_alt = int(request.form["num_alternativas"])
+            try:
+                num_alt = int(request.form["num_alternativas"])
+            except (ValueError, TypeError):
+                flash("El número de alternativas debe ser un entero", "error")
+                return redirect(url_for("routes.alternativas"))
+            
+            if num_alt < 2 or num_alt > 20:
+                flash("El número de alternativas debe estar entre 2 y 20", "error")
+                return redirect(url_for("routes.alternativas"))
+            
             session["num_alternativas"] = num_alt
             session.pop("alternativas", None)
             return redirect(url_for("routes.alternativas")) 
@@ -162,9 +178,10 @@ def alternativas():
             alternativas_list = []
             for i in range(num_alt):
                 nombre = request.form.get(f"alt_{i}")
-                if not nombre:
+                if not nombre or not nombre.strip():
                     flash("Faltan nombres de alternativas", 'warning')
                     return redirect(url_for("routes.alternativas"))
+                nombre = nombre.strip()[:100]  # Limitar longitud
                 alternativas_list.append(nombre)
 
             session["alternativas"] = alternativas_list
@@ -197,10 +214,30 @@ def matriz_topsis():
             fila = []
             for j in range(num_criterios):
                 valor = request.form.get(f"cell_{i}_{j}")
-                if valor is None:
-                    flash("Faltan valores en la matriz", "error")
+                if valor is None or valor.strip() == '':
+                    flash(f"Falta el valor en fila {i+1}, columna {j+1}", "error")
                     return redirect(request.url)
-                fila.append(float(valor))
+                
+                valor = valor.strip()
+                
+                # Validar que sea un entero (no decimales, no letras, no caracteres raros)
+                try:
+                    numero = int(valor)
+                except (ValueError, TypeError):
+                    flash(f"El valor en fila {i+1}, columna {j+1} debe ser un número entero (ingresaste: '{valor}')", "error")
+                    return redirect(request.url)
+                
+                # Validar que el string original no tenga decimales (prevenir "50.0" -> 50)
+                if '.' in valor or ',' in valor:
+                    flash(f"El valor en fila {i+1}, columna {j+1} no puede tener decimales", "error")
+                    return redirect(request.url)
+                
+                # Validar rango 0-100
+                if numero < 0 or numero > 100:
+                    flash(f"El valor en fila {i+1}, columna {j+1} debe estar entre 0 y 100 (ingresaste: {numero})", "error")
+                    return redirect(request.url)
+                
+                fila.append(float(numero))
             matriz.append(fila)
 
         session["matriz_topsis"] = matriz
