@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <circle cx="60" cy="60" r="56" fill="#1a3a5c" stroke="#4a90d9" stroke-width="3"/>
+  <circle cx="60" cy="60" r="48" fill="none" stroke="#4a90d9" stroke-width="1.5"/>
+  <text x="60" y="35" text-anchor="middle" fill="#4a90d9" font-family="Georgia, serif" font-size="8" font-weight="bold">CENTRO</text>
+  <text x="60" y="46" text-anchor="middle" fill="#4a90d9" font-family="Georgia, serif" font-size="8" font-weight="bold">UNIVERSITARIO DE</text>
+  <text x="60" y="57" text-anchor="middle" fill="#4a90d9" font-family="Georgia, serif" font-size="8" font-weight="bold">OCCIDENTE</text>
+  <text x="60" y="78" text-anchor="middle" fill="#ffffff" font-family="Georgia, serif" font-size="14" font-weight="bold">CUNOC</text>
+  <line x1="35" y1="65" x2="85" y2="65" stroke="#4a90d9" stroke-width="1"/>
+  <text x="60" y="95" text-anchor="middle" fill="#4a90d9" font-family="Georgia, serif" font-size="7">USAC</text>
+</svg>

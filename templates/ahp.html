@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+{% block title %}Matriz AHP{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <!-- Step Indicator -->
+    <div class="step-indicator">
+        <div class="step done"><span class="step-num">1</span> Criterios</div>
+        <div class="step active"><span class="step-num">2</span> Matriz AHP</div>
+        <div class="step"><span class="step-num">3</span> Alternativas</div>
+        <div class="step"><span class="step-num">4</span> Evaluación</div>
+        <div class="step"><span class="step-num">5</span> Resultados</div>
+    </div>
+
+    <div class="page-header">
+        <h1>Análisis Jerárquico (AHP)</h1>
+        <p>Llena la matriz de comparación por pares</p>
+    </div>
+    
+    <div class="escala-info">
+        <strong>Escala de Saaty:</strong> 
+        1 = Igual importancia · 3 = Moderadamente más importante · 
+        5 = Fuertemente más importante · 7 = Muy fuertemente más importante · 
+        9 = Extremadamente más importante<br>
+        <em>Puedes usar fracciones como 1/3, 1/5, etc.</em>
+    </div>
+
+    <div class="ejemplo-ahp">
+        <div class="ejemplo-toggle" onclick="this.parentElement.classList.toggle('open')">
+            <strong>📖 Ver ejemplo de llenado AHP</strong>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="ejemplo-content">
+            <p>Supón que tienes 3 criterios: <strong>Costo</strong>, <strong>Calidad</strong> y <strong>Tiempo de entrega</strong>.</p>
+            <p>Para llenar la matriz, compara cada par de criterios y asigna un valor de la escala de Saaty:</p>
+            <div class="table-wrapper" style="margin: 12px 0;">
+            <table class="example-table">
+                <thead>
+                    <tr><th></th><th>Costo</th><th>Calidad</th><th>Tiempo</th></tr>
+                </thead>
+                <tbody>
+                    <tr><th>Costo</th><td>1</td><td>3</td><td>5</td></tr>
+                    <tr><th>Calidad</th><td>1/3</td><td>1</td><td>2</td></tr>
+                    <tr><th>Tiempo</th><td>1/5</td><td>1/2</td><td>1</td></tr>
+                </tbody>
+            </table>
+            </div>
+            <p><strong>¿Cómo leerlo?</strong></p>
+            <p>• Fila "Costo" vs Columna "Calidad" = <strong>3</strong> → El costo es <em>moderadamente más importante</em> que la calidad.</p>
+            <p>• Fila "Calidad" vs Columna "Costo" = <strong>1/3</strong> → Es el recíproco (la calidad es moderadamente <em>menos</em> importante que el costo).</p>
+            <p>• La diagonal siempre es <strong>1</strong> (un criterio comparado consigo mismo).</p>
+            <p><em>Recuerda: si el criterio de la fila es más importante que el de la columna, usa valores entre 2 y 9. Si es menos importante, usa fracciones como 1/2, 1/3, 1/5, etc.</em></p>
+        </div>
+    </div>
+    
+    <form method="POST">
+        <div class="table-wrapper">
+        <table class="matrix-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    {% for c in criterios %}
+                        <th>{{ c }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in range(num_criterios) %}
+                <tr>
+                    <th>{{ criterios[i] }}</th>
+                    {% for j in range(num_criterios) %}
+                        <td>
+                            <input type="text"
+                                   name="cell_{{ i }}_{{ j }}"
+                                   class="ahp-input"
+                                   value="{{ '1.00' if i == j else '' }}"
+                                   onblur="convertirFraccion(this)"
+                                   oninput="validarEntrada(this)"
+                                   {% if i == j %}readonly style="background: var(--gris-100); font-weight: bold; color: var(--gris-500);"{% endif %}
+                                   required>
+                        </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        <div class="btn-container">
+            <button type="submit">Calcular Pesos</button>
+        </div>
+    </form>
+
+    {% if pesos is not none %}
+    <hr>
+    
+    <h3>Pesos calculados con AHP</h3>
+    
+    <table class="result-table">
+        <thead>
+            <tr>
+                <th>Criterio</th>
+                <th>Peso</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in range(criterios|length) %}
+            <tr>
+                <td><strong>{{ criterios[i] }}</strong></td>
+                <td>{{ "%.4f"|format(pesos[i]) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="btn-container">
+        <a href="{{ url_for('routes.alternativas') }}" class="btn">Continuar con TOPSIS →</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function mostrarError(input, mensaje) {
+    limpiarError(input);
+    input.classList.add('input-error');
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'ahp-error-msg';
+    errorDiv.textContent = mensaje;
+    input.parentElement.appendChild(errorDiv);
+}
+
+function limpiarError(input) {
+    input.classList.remove('input-error');
+    const errorExistente = input.parentElement.querySelector('.ahp-error-msg');
+    if (errorExistente) errorExistente.remove();
+}
+
+function mostrarErrorGeneral(mensaje) {
+    let banner = document.getElementById('ahp-error-banner');
+    if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'ahp-error-banner';
+        banner.className = 'ahp-error-banner';
+        const form = document.querySelector('form');
+        form.parentElement.insertBefore(banner, form);
+    }
+    banner.textContent = mensaje;
+    banner.style.display = 'block';
+    setTimeout(() => { banner.style.display = 'none'; }, 5000);
+}
+
+function validarEntrada(input) {
+    input.value = input.value.replace(/[^0-9.\/]/g, '');
+    const puntos = (input.value.match(/\./g) || []).length;
+    const barras = (input.value.match(/\//g) || []).length;
+    if (puntos > 1) {
+        input.value = input.value.substring(0, input.value.lastIndexOf('.'));
+    }
+    if (barras > 1) {
+        input.value = input.value.substring(0, input.value.lastIndexOf('/'));
+    }
+    if (input.value.length > 0) {
+        limpiarError(input);
+    }
+}
+
+function convertirFraccion(input) {
+    if (input.value === '' || input.readOnly) return;
+    const valor = input.value.trim();
+    
+    if (valor.includes('/')) {
+        const partes = valor.split('/');
+        if (partes.length !== 2) {
+            input.value = '';
+            mostrarError(input, 'Formato: numerador/denominador (ej: 1/3)');
+            input.focus();
+            return;
+        }
+        const numerador = parseFloat(partes[0]);
+        const denominador = parseFloat(partes[1]);
+        if (isNaN(numerador) || isNaN(denominador) || denominador === 0) {
+            input.value = '';
+            mostrarError(input, 'Fracción inválida. Ej: 1/3, 1/5');
+            input.focus();
+            return;
+        }
+        const resultado = numerador / denominador;
+        if (resultado < 0.11 || resultado > 9) {
+            input.value = '';
+            mostrarError(input, 'Valor fuera de rango (0.11 – 9)');
+            input.focus();
+            return;
+        }
+        limpiarError(input);
+        input.value = resultado.toFixed(2);
+        input.style.background = '#dbeafe';
+        setTimeout(() => { input.style.background = ''; }, 500);
+    } else {
+        const numero = parseFloat(valor);
+        if (isNaN(numero)) {
+            input.value = '';
+            mostrarError(input, 'Ingresa un número válido');
+            input.focus();
+            return;
+        }
+        if (numero < 0.11 || numero > 9) {
+            input.value = '';
+            mostrarError(input, 'Valor fuera de rango (0.11 – 9)');
+            input.focus();
+            return;
+        }
+        limpiarError(input);
+        input.value = numero.toFixed(2);
+    }
+}
+
+document.querySelector('form').addEventListener('submit', function(e) {
+    const inputs = document.querySelectorAll('.ahp-input:not([readonly])');
+    let valido = true;
+    let primerError = null;
+
+    inputs.forEach(input => {
+        limpiarError(input);
+        const valor = input.value.trim();
+
+        if (valor === '') {
+            valido = false;
+            mostrarError(input, 'Requerido');
+            if (!primerError) primerError = input;
+            return;
+        }
+
+        const numero = parseFloat(valor);
+        if (isNaN(numero)) {
+            valido = false;
+            mostrarError(input, 'No es un número');
+            if (!primerError) primerError = input;
+            return;
+        }
+
+        if (numero < 0.11 || numero > 9) {
+            valido = false;
+            mostrarError(input, 'Rango: 0.11 – 9');
+            if (!primerError) primerError = input;
+        }
+    });
+
+    if (!valido) {
+        e.preventDefault();
+        mostrarErrorGeneral('Corrige los campos marcados en rojo antes de continuar.');
+        if (primerError) primerError.focus();
+    }
+});
+</script>
+{% endblock %}

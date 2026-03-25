@@ -1,15 +1,66 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Ingresar número de alternativas</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <h2>¿Cuántas alternativas deseas evaluar?</h2>
-    <form method="POST">
-        <label for="num_alternativas">Número de alternativas:</label>
-        <input type="number" name="num_alternativas" min="2" required>
-        <button type="submit">Continuar</button>
-    </form>
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}Alternativas - TOPSIS{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <!-- Step Indicator -->
+    <div class="step-indicator">
+        <div class="step done"><span class="step-num">1</span> Criterios</div>
+        <div class="step done"><span class="step-num">2</span> Matriz AHP</div>
+        <div class="step active"><span class="step-num">3</span> Alternativas</div>
+        <div class="step"><span class="step-num">4</span> Evaluación</div>
+        <div class="step"><span class="step-num">5</span> Resultados</div>
+    </div>
+
+    <div class="page-header">
+        <h1>Definición de Alternativas</h1>
+        <p>Ingresa las alternativas que deseas evaluar con TOPSIS</p>
+    </div>
+
+    {% if not num_alt %}
+    <div class="section-card">
+        <h2>¿Cuántas alternativas deseas evaluar?</h2>
+        <form method="POST">
+            <div class="form-row" style="justify-content: center;">
+                <label>Número de alternativas:</label>
+                <input type="number" name="num_alternativas" min="2" max="20" required>
+                <button type="submit">Continuar</button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+    {% if num_alt and not alternativas %}
+    <div class="section-card">
+        <h2>Nombre de cada alternativa</h2>
+        <form method="POST">
+            {% for i in range(num_alt) %}
+                <div class="form-row">
+                    <label>Alternativa {{ i + 1 }}:</label>
+                    <input type="text" name="alt_{{ i }}" placeholder="Nombre de la alternativa" required>
+                </div>
+            {% endfor %}
+            <div class="btn-container">
+                <button type="submit">Continuar a Matriz de Evaluación</button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+    {% if alternativas %}
+    <div class="section-card">
+        <h2>Alternativas registradas</h2>
+        <ul>
+            {% for alt in alternativas %}
+                <li>{{ alt }}</li>
+            {% endfor %}
+        </ul>
+
+        <div class="btn-container">
+            <a href="{{ url_for('routes.matriz_topsis')}}" class="btn">Continuar a Matriz de Evaluación →</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

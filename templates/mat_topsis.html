@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block title %}Matriz TOPSIS{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <!-- Step Indicator -->
+    <div class="step-indicator">
+        <div class="step done"><span class="step-num">1</span> Criterios</div>
+        <div class="step done"><span class="step-num">2</span> Matriz AHP</div>
+        <div class="step done"><span class="step-num">3</span> Alternativas</div>
+        <div class="step active"><span class="step-num">4</span> Evaluación</div>
+        <div class="step"><span class="step-num">5</span> Resultados</div>
+    </div>
+
+    <div class="page-header">
+        <h1>Matriz de Evaluación</h1>
+        <p>Califica cada alternativa en cada criterio (escala 0 – 100)</p>
+    </div>
+
+    <form method="POST" id="topsis-form">
+        <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Alternativa</th>
+                    {% for criterio in criterios %}
+                        <th>{{ criterio }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in range(alternativas|length) %}
+                <tr>
+                    <td><strong>{{ alternativas[i] }}</strong></td>
+                    {% for j in range(criterios|length) %}
+                        <td class="topsis-cell">
+                            <input
+                                type="text"
+                                inputmode="numeric"
+                                name="cell_{{ i }}_{{ j }}"
+                                class="topsis-input"
+                                autocomplete="off"
+                                maxlength="3"
+                                style="width: 80px; text-align: center; padding: 8px 4px; border: 1.5px solid var(--gris-300); border-radius: var(--radio-sm); font-family: 'Source Sans 3', sans-serif;"
+                                required
+                            >
+                        </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+
+        <div id="topsis-error-banner" class="ahp-error-banner" style="display:none;"></div>
+
+        <div class="btn-container">
+            <button type="submit">Calcular TOPSIS</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* Solo permite dígitos del 0-9, nada de letras, puntos, guiones, e, +, etc. */
+document.querySelectorAll('.topsis-input').forEach(function(input) {
+    /* Prevenir cualquier tecla que no sea dígito o tecla de control */
+    input.addEventListener('keydown', function(e) {
+        const permitidas = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
+        if (permitidas.includes(e.key)) return;
+        if (e.ctrlKey || e.metaKey) return;
+        if (!/^[0-9]$/.test(e.key)) {
+            e.preventDefault();
+        }
+    });
+
+    /* Limpiar en paste: quitar todo lo que no sea dígito */
+    input.addEventListener('paste', function(e) {
+        e.preventDefault();
+        const texto = (e.clipboardData || window.clipboardData).getData('text');
+        const soloDigitos = texto.replace(/[^0-9]/g, '').slice(0, 3);
+        document.execCommand('insertText', false, soloDigitos);
+    });
+
+    /* En input: sanitizar y validar rango */
+    input.addEventListener('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '');
+        if (this.value.length > 3) this.value = this.value.slice(0, 3);
+
+        const num = parseInt(this.value, 10);
+        if (!isNaN(num) && num > 100) {
+            this.value = '100';
+        }
+
+        limpiarErrorTopsis(this);
+    });
+
+    /* En blur: validación final */
+    input.addEventListener('blur', function() {
+        if (this.value === '') return;
+        const num = parseInt(this.value, 10);
+        if (isNaN(num) || num < 0 || num > 100) {
+            this.value = '';
+            mostrarErrorTopsis(this, '0 – 100');
+        } else {
+            this.value = num.toString();
+            limpiarErrorTopsis(this);
+        }
+    });
+});
+
+function mostrarErrorTopsis(input, mensaje) {
+    limpiarErrorTopsis(input);
+    input.classList.add('input-error');
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'ahp-error-msg';
+    errorDiv.textContent = mensaje;
+    input.parentElement.appendChild(errorDiv);
+}
+
+function limpiarErrorTopsis(input) {
+    input.classList.remove('input-error');
+    const err = input.parentElement.querySelector('.ahp-error-msg');
+    if (err) err.remove();
+}
+
+document.getElementById('topsis-form').addEventListener('submit', function(e) {
+    const inputs = document.querySelectorAll('.topsis-input');
+    let valido = true;
+    let primerError = null;
+
+    inputs.forEach(function(input) {
+        limpiarErrorTopsis(input);
+        const valor = input.value.trim();
+
+        if (valor === '') {
+            valido = false;
+            mostrarErrorTopsis(input, 'Requerido');
+            if (!primerError) primerError = input;
+            return;
+        }
+
+        const num = parseInt(valor, 10);
+
+        if (isNaN(num) || valor !== num.toString()) {
+            valido = false;
+            mostrarErrorTopsis(input, 'Solo enteros');
+            if (!primerError) primerError = input;
+            return;
+        }
+
+        if (num < 0 || num > 100) {
+            valido = false;
+            mostrarErrorTopsis(input, '0 – 100');
+            if (!primerError) primerError = input;
+        }
+    });
+
+    if (!valido) {
+        e.preventDefault();
+        const banner = document.getElementById('topsis-error-banner');
+        banner.textContent = 'Corrige los campos marcados en rojo. Solo se permiten números enteros de 0 a 100.';
+        banner.style.display = 'block';
+        setTimeout(function() { banner.style.display = 'none'; }, 5000);
+        if (primerError) primerError.focus();
+    }
+});
+</script>
+{% endblock %}

@@ -1,29 +1,108 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Resultado TOPSIS</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <h2>Ranking de alternativas (TOPSIS)</h2>
-<table>
-  <thead>
-    <tr>
-      <th>Posición</th>
-      <th>Alternativa</th>
-      <th>Puntaje</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for resultado in resultados %}
-      <tr>
-        <td>{{ loop.index }}</td>  <!-- loop.index empieza en 1 -->
-        <td>{{ resultado[0] }}</td>
-        <td>{{ resultado[1] }}</td>
-      </tr>
-    {% endfor %}
-  </tbody>
-</table>
-    <a href="{{ url_for('select_size') }}">Volver al inicio</a>
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}Resultados TOPSIS{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <!-- Step Indicator -->
+    <div class="step-indicator">
+        <div class="step done"><span class="step-num">1</span> Criterios</div>
+        <div class="step done"><span class="step-num">2</span> Matriz AHP</div>
+        <div class="step done"><span class="step-num">3</span> Alternativas</div>
+        <div class="step done"><span class="step-num">4</span> Evaluación</div>
+        <div class="step active"><span class="step-num">5</span> Resultados</div>
+    </div>
+
+    <div class="page-header">
+        <h1>Resultados del Análisis TOPSIS</h1>
+        <p>Análisis completo con ponderación AHP</p>
+    </div>
+
+    <h3>Matriz Ponderada</h3>
+    <div class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>Alternativa</th>
+                {% for c in criterios %}<th>{{ c }}</th>{% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in range(alternativas|length) %}
+            <tr>
+                <td><strong>{{ alternativas[i] }}</strong></td>
+                {% for j in range(criterios|length) %}
+                    <td>{{ "%.4f"|format(matriz_pond[i][j]) }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+
+    <h3>Solución Ideal Positiva (A⁺)</h3>
+    <ul>
+        {% for j in range(criterios|length) %}
+            <li><strong>{{ criterios[j] }}:</strong> {{ "%.4f"|format(ideal_pos[j]) }}</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Solución Ideal Negativa (A⁻)</h3>
+    <ul>
+        {% for j in range(criterios|length) %}
+            <li><strong>{{ criterios[j] }}:</strong> {{ "%.4f"|format(ideal_neg[j]) }}</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Ranking Final</h3>
+    <table class="result-table">
+        <thead>
+            <tr>
+                <th>Ranking</th>
+                <th>Alternativa</th>
+                <th>Puntuación</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for alt, score in resultados %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td><strong>{{ alt }}</strong></td>
+                <td>{{ score }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <hr>
+
+    <!-- FORMULARIO DE GUARDADO -->
+    <div class="save-form">
+        <h2>Guardar este Análisis</h2>
+        
+        <!-- Mostrar datos capturados al inicio -->
+        <div class="info-card" style="margin-bottom: 20px;">
+            <p><strong>Registro Académico:</strong> {{ registro_academico or 'No registrado' }}</p>
+            <p><strong>Curso:</strong> {{ curso or 'No registrado' }}</p>
+            <p><strong>Categoría CIIU:</strong> {{ categoria_ciiu or 'No registrada' }}</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('routes.guardar_analisis_route') }}">
+            <div class="form-row">
+                <label>Descripción del análisis:</label>
+                <input type="text" name="descripcion" 
+                       placeholder="Ej: Selección de proveedor textil" 
+                       maxlength="200"
+                       required>
+            </div>
+
+            <div class="btn-container" style="margin-top: 20px;">
+                <button type="submit" class="btn-success">Guardar Análisis</button>
+                <a href="{{ url_for('routes.index') }}" class="btn" style="background: var(--gris-500);">
+                    Nuevo Análisis (sin guardar)
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

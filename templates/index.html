@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Inicio - Sistema TOPSIS{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <div class="page-header">
+        <h1>Sistema de Análisis Multicriterio TOPSIS</h1>
+        <p>Técnica de Ordenación de Preferencias por Similitud con la Solución Ideal</p>
+    </div>
+
+    <!-- ===== HISTORIAL ===== -->
+    <h2>Historial de Análisis</h2>
+
+    {% if historial %}
+    <table class="result-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Fecha</th>
+                <th>Registro</th>
+                <th>Curso</th>
+                <th>Categoría CIIU</th>
+                <th>Análisis</th>
+                <th>Mejor Alternativa</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for consulta in historial %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ consulta.fecha_creacion }}</td>
+                <td>{{ consulta.registro_academico }}</td>
+                <td>{{ consulta.curso }}</td>
+                <td>{{ consulta.categoria_ciiu }}</td>
+                <td>{{ consulta.nombre_analisis }}</td>
+                <td><strong>{{ consulta.ranking_final[0][0] }}</strong></td>
+                <td>
+                    <a href="{{ url_for('routes.ver_analisis', id=consulta.id) }}" class="btn-small">Ver</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <div class="icon">📋</div>
+        <p>No hay análisis guardados aún. ¡Crea tu primer análisis!</p>
+    </div>
+    {% endif %}
+
+    <hr>
+
+    <!-- ===== NUEVO ANÁLISIS ===== -->
+    <div class="section-card">
+        <h2>Nuevo Análisis TOPSIS</h2>
+
+        <form method="POST">
+            <div class="form-row">
+                <label>Registro Académico:</label>
+                <input type="text" 
+                       name="registro_academico" 
+                       placeholder="Ej: 202030824" 
+                       pattern="[0-9]{9}" 
+                       maxlength="9"
+                       oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 9)"
+                       title="Debe ser un número de 9 dígitos"
+                       required>
+            </div>
+
+            <div class="form-row">
+                <label>Curso:</label>
+                <select name="curso" required>
+                    <option value="">-- Selecciona un curso --</option>
+                    {% for c in cursos %}
+                        <option value="{{ c }}">{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-row">
+                <label>Categoría CIIU:</label>
+                <select name="categoria_ciiu" required>
+                    {% for key, value in categorias_ciiu.items() %}
+                        <option value="{{ key }}">{{ value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-row">
+                <label>Número de criterios:</label>
+                <input type="number" 
+                       name="criterios" 
+                       min="2" 
+                       max="10" 
+                       step="1"
+                       oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                       required>
+            </div>
+
+            <div class="btn-container">
+                <button type="submit">Iniciar Análisis</button>
+            </div>
+        </form>
+    </div>
+
+    {% if num_criterios %}
+    <hr>
+
+    <div class="section-card">
+        <h2>Asigna un nombre a cada criterio</h2>
+        <form method="POST">
+            <input type="hidden" name="num_criterios" value="{{ num_criterios }}">
+
+            {% for i in range(num_criterios) %}
+            <div class="criterio-row">
+                <label>Criterio {{ i+1 }}:</label>
+                <input type="text" name="criterio_{{ i }}" placeholder="Nombre del criterio" required>
+                <select name="tipo_{{ i }}">
+                    <option value="max">Maximizar</option>
+                    <option value="min">Minimizar</option>
+                </select>
+            </div>
+            {% endfor %}
+            
+            <div class="btn-container">
+                <button type="submit">Continuar a AHP</button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

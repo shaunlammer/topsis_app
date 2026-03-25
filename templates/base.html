@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TOPSIS - USAC{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <!-- ===== HEADER INSTITUCIONAL ===== -->
+    <header class="header-institucional">
+        <div class="header-top">
+            <div class="header-logos">
+                <img src="{{ url_for('static', filename='img/usac_sello.png') }}" alt="USAC" class="logo-usac">
+                <img src="{{ url_for('static', filename='img/cunoc_ingenieria.jpg') }}" alt="CUNOC Ingeniería" class="logo-cunoc">
+                <div class="header-titles">
+                    <span class="universidad">Universidad de San Carlos de Guatemala — CUNOC</span>
+                    <span class="division">División de Ciencias de la Ingeniería</span>
+                    <span class="carrera">Ingeniería Industrial</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <span class="header-badge">Sistema TOPSIS + AHP</span>
+            </div>
+        </div>
+        <nav class="nav-bar">
+            <ul>
+                <li><a href="{{ url_for('routes.index') }}" class="{% if active_page == 'inicio' %}active{% endif %}">Inicio</a></li>
+                <li><a href="{{ url_for('routes.index') }}" class="{% if active_page == 'nuevo' %}active{% endif %}">Nuevo Análisis</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- ===== FLASH MESSAGES ===== -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash flash-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="footer">
+        &copy; 2026 — Universidad de San Carlos de Guatemala · CUNOC · División de Ciencias de la Ingeniería · Ingeniería Industrial
+    </footer>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

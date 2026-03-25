@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Error - TOPSIS{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="error-box">
+        <h1>Algo salió mal</h1>
+        <p class="error-message">{{ mensaje }}</p>
+        
+        <div class="btn-container" style="margin-top: 30px;">
+            <a href="{{ url_for('routes.index') }}" class="btn">Volver al Inicio</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
