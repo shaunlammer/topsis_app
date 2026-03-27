@@ -20,11 +20,15 @@ DB_CONFIG = {
 
 def get_db_connection():
     """Crear conexión a la base de datos"""
+    import traceback
     try:
         connection = pymysql.connect(**DB_CONFIG)
         return connection
     except pymysql.Error as e:
-        print(f"Error al conectar a la base de datos: {e}")
+        print(f"[DB ERROR] No se pudo conectar a la base de datos.")
+        print(f"  Host: {DB_CONFIG['host']}  Puerto: {DB_CONFIG['port']}  BD: {DB_CONFIG['database']}  Usuario: {DB_CONFIG['user']}")
+        print(f"  Detalle: {type(e).__name__}: {e}")
+        print(traceback.format_exc())
         return None
 
 def test_connection():
@@ -105,10 +109,10 @@ def guardar_analisis(datos):
         conn.close()
 
 def obtener_historial():
-    """Obtener todos los análisis guardados"""
+    """Obtener todos los análisis guardados. Retorna [] si no hay conexión."""
     conn = get_db_connection()
     if not conn:
-        return []
+        return None  # None indica fallo de conexión, [] indica sin registros
     
     try:
         with conn.cursor() as cursor:
@@ -129,8 +133,10 @@ def obtener_historial():
             
             return resultados
     except Exception as e:
-        print(f"Error al obtener historial: {e}")
-        return []
+        import traceback
+        print(f"[DB ERROR] Error al obtener historial: {type(e).__name__}: {e}")
+        print(traceback.format_exc())
+        return None
     finally:
         conn.close()
 
@@ -165,6 +171,23 @@ def obtener_analisis_por_id(analisis_id):
         return None
     finally:
         conn.close()
+
+def obtener_usuario_por_nombre(nombre):
+    """Obtener un usuario de la tabla usuarios por su nombre. Retorna el dict o None."""
+    conn = get_db_connection()
+    if not conn:
+        return None
+    try:
+        with conn.cursor() as cursor:
+            sql = "SELECT id, nombre, clave, activo FROM usuarios WHERE nombre = %s LIMIT 1"
+            cursor.execute(sql, (nombre,))
+            return cursor.fetchone()
+    except Exception as e:
+        print(f"Error al obtener usuario: {e}")
+        return None
+    finally:
+        conn.close()
+
 
 def eliminar_analisis(analisis_id):
     """Eliminar un análisis por su ID"""
