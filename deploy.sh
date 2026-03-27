@@ -14,9 +14,9 @@ echo "Construyendo la imagen..."
 docker build -t topsis-image .
 
 # 4. Levantar el nuevo contenedor en el puerto 7000 (que es el que definimos antes)
-echo "Levantando el contenedor en el puerto 7000..."
+echo "Levantando el contenedor en el puerto 5000..."
 docker run -d \
-  -p 7000:7000 \
+  -p 5000:5000 \
   --add-host=host.docker.internal:host-gateway \
   --name topsis-app \
   --restart unless-stopped \
