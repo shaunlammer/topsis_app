@@ -18,6 +18,7 @@ echo "Levantando el contenedor en el puerto 5000..."
 docker run -d \
   -p 5000:5000 \
   --add-host=host.docker.internal:host-gateway \
+  --env-file .env \
   --name topsis-app \
   --restart unless-stopped \
   topsis-image
