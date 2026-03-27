@@ -1,13 +1,19 @@
 import pymysql
 import json
+import os
 from datetime import datetime
+from dotenv import load_dotenv
 
-# Configuración de la base de datos
+# Cargar variables de entorno desde el archivo .env
+load_dotenv()
+
+# Configuración de la base de datos usando variables de entorno
 DB_CONFIG = {
-    'host': 'localhost',
-    'user': 'root',
-    'password': '',  # Por defecto XAMPP no tiene contraseña
-    'database': 'topsis_db',
+    'host': os.getenv('DB_HOST', 'localhost'),
+    'user': os.getenv('DB_USER', 'root'),
+    'password': os.getenv('DB_PASSWORD', ''),
+    'database': os.getenv('DB_NAME', 'topsis_db'),
+    'port': int(os.getenv('DB_PORT', 3306)),
     'charset': 'utf8mb4',
     'cursorclass': pymysql.cursors.DictCursor
 }
