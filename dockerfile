@@ -16,6 +16,16 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 COPY . .
 
+# Variables de entorno para la conexión a la base de datos.
+# Sobreescribe estos valores al correr el contenedor:
+#   docker run --env-file .env ...
+#   o bien con -e DB_HOST=... -e DB_USER=... etc.
+ENV DB_HOST=localhost \
+    DB_USER=root \
+    DB_PASSWORD="" \
+    DB_NAME=topsis_db \
+    DB_PORT=3306
+
 EXPOSE 5000
 
 # Asegúrate de que en app.py el host sea '0.0.0.0' y el puerto 7000
